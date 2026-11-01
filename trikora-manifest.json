@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "Trikora – Trikot-Atelier",
+  "short_name": "Trikora",
+  "description": "Gestalte dein eigenes Fussballtrikot, stelle es online und lass es bewerten.",
+  "lang": "de",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e9ecef",
+  "theme_color": "#0b6e4f",
+  "categories": ["sports", "entertainment", "design"],
+  "icons": [
+    { "src": "trikora-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "trikora-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "trikora-icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
