@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080d16"><meta name="description" content="KitForge – eigener Fussballkit-Designer">
+<title>KitForge Studio</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#080d16;--panel:#101927;--panel2:#152235;--line:#26374c;--text:#f4f7fb;--muted:#9eafc2;--blue:#16a5ff;--gold:#d6b36a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#17324c 0,#080d16 48%);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,sans-serif}
+header{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #203047;background:#080d16e8;position:sticky;top:0;z-index:5}
+.brand{font-weight:900;letter-spacing:.4px;font-size:21px}.brand span{color:var(--blue)}.sub{font-size:10px;color:var(--muted);letter-spacing:1.6px}
+button,input,select{font:inherit}button{border:1px solid var(--line);background:#172438;color:var(--text);border-radius:11px;padding:10px 13px;font-weight:650;cursor:pointer}button.primary{background:linear-gradient(120deg,#087fe0,#12aaff);border:0;color:white}button.active{border-color:var(--blue);background:#123657;color:#8bd3ff}
+main{max-width:1200px;margin:auto;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px}
+.stage{background:linear-gradient(160deg,#172538,#0b111c 65%);border:1px solid var(--line);border-radius:18px;overflow:hidden;min-height:600px;position:relative;display:flex;flex-direction:column}
+.stageTop{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #26374c}.stageTop small{color:var(--muted)}
+.viewer{position:relative;flex:1;min-height:480px;background:radial-gradient(ellipse at 50% 43%,#30465b 0,#172638 35%,#0b121d 78%);display:flex;align-items:center;justify-content:center}
+model-viewer{width:100%;height:100%;min-height:480px;--poster-color:transparent;background:transparent}
+.viewerTools{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px;background:#07101bd9;border:1px solid #31445b;padding:6px;border-radius:14px;z-index:2;white-space:nowrap}
+.viewerTools button{padding:8px 12px;font-size:12px}
+.hint{position:absolute;top:12px;left:14px;color:#c4d0dd;background:#07101b9c;padding:7px 10px;border-radius:9px;font-size:11px}
+.side{display:flex;flex-direction:column;gap:12px}.card{background:linear-gradient(160deg,#111c2b,#0d1521);border:1px solid var(--line);border-radius:16px;padding:14px}
+h3{margin:0 0 12px;font-size:14px}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tabs button{flex:1;padding:9px 6px;font-size:12px}
+label{display:block;color:#bdcad8;font-size:12px;margin:10px 0 6px}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1;min-width:0}
+input[type=color]{width:100%;height:42px;padding:3px;border:1px solid var(--line);border-radius:10px;background:#0b1420}
+input[type=text],select{width:100%;padding:11px;background:#0a1421;border:1px solid var(--line);border-radius:10px;color:white}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.swatch{height:30px;border-radius:8px;border:2px solid #ffffff30;padding:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{font-size:11px;padding:8px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.muted{color:var(--muted);font-size:11px;line-height:1.5}.status{font-size:11px;color:#91cfff;min-height:16px;margin-top:8px}
+footer{max-width:1200px;margin:0 auto;padding:0 16px 18px;color:#6f8298;font-size:10px}
+@media(max-width:820px){main{grid-template-columns:1fr;padding:9px}.stage{min-height:490px}.viewer,model-viewer{min-height:420px}.side{display:grid;grid-template-columns:1fr 1fr}.side .wide{grid-column:1/-1}header{height:54px}}
+@media(max-width:520px){.side{display:flex}.stage{min-height:460px}.viewer,model-viewer{min-height:390px}.brand{font-size:18px}}
+</style>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+</head>
+<body>
+<header><div><div class="brand">KIT<span>FORGE</span></div><div class="sub">FOOTBALL KIT CREATOR</div></div><button class="primary" id="saveTop">Speichern</button></header>
+<main>
+<section class="stage">
+ <div class="stageTop"><div><b>3D KIT PREVIEW</b><br><small>Ziehe zum Drehen · Pinch zum Zoomen</small></div><div class="chips"><button id="reset">Reset</button><button id="fullscreen">⛶</button></div></div>
+ <div class="viewer">
+  <div class="hint">REAL 3D MODEL · FRONT / BACK</div>
+  <model-viewer id="kit" src="kit.glb" camera-controls auto-rotate auto-rotate-delay="1800" rotation-per-second="18deg" shadow-intensity="1.1" exposure="1.05" environment-image="neutral" camera-orbit="0deg 75deg 3.3m" field-of-view="28deg" interaction-prompt="none" alt="3D Fussballtrikot mit Hose und Stutzen">
+   <div slot="progress-bar"></div>
+  </model-viewer>
+  <div class="viewerTools"><button id="front" class="active">Vorne</button><button id="back">Hinten</button><button id="sideview">Seite</button><button id="spin">360°</button></div>
+ </div>
+</section>
+<aside class="side">
+ <section class="card">
+  <h3>Design bearbeiten</h3>
+  <div class="tabs"><button class="active" data-tab="shirt">Trikot</button><button data-tab="shorts">Hose</button><button data-tab="socks">Stutzen</button></div>
+  <label>Grundfarbe</label><div class="row"><input id="color" type="color" value="#f3f3ef"><div class="swatches" id="swatches"></div></div>
+  <label>Akzentfarbe</label><input id="accent" type="color" value="#111827">
+  <label>Designmuster</label><div class="chips" id="patterns"><button class="active" data-pattern="plain">Einfarbig</button><button data-pattern="stripes">Streifen</button><button data-pattern="diagonal">Diagonal</button><button data-pattern="hoops">Querstreifen</button></div>
+  <label>Material / Glanz</label><input id="rough" type="range" min="25" max="100" value="82"><div class="muted">Matt bis glänzend</div>
+ </section>
+ <section class="card">
+  <h3>Personalisierung</h3>
+  <label>Spielername</label><input id="player" type="text" maxlength="16" placeholder="DEIN NAME">
+  <label>Rückennummer</label><input id="number" type="text" maxlength="2" value="10" inputmode="numeric">
+  <label>Sponsor / Schriftzug</label><input id="sponsor" type="text" maxlength="22" placeholder="SPONSOR">
+  <label>Vereinslogo hochladen</label><input id="logo" type="file" accept="image/*" style="width:100%;color:#9eafc2">
+  <div class="muted">Personalisierungsdaten werden in deinem Design gespeichert. Auf dem Modell werden sie als nächster Ausbau direkt auf den Stoff gedruckt.</div>
+ </section>
+ <section class="card wide">
+  <h3>Dein Design</h3>
+  <div class="actions"><button id="save" class="primary">Design speichern</button><button id="export">Ansicht exportieren</button><button id="load">Gespeichertes Design laden</button><button id="resetAll">Alles zurücksetzen</button></div>
+  <div class="status" id="status">Bereit – ändere Farben direkt am 3D-Modell.</div>
+ </section>
+</aside>
+</main>
+<footer>KitForge Studio · Läuft lokal im Android-WebView. Für den 3D-Viewer ist beim ersten Start eine Internetverbindung nötig.</footer>
+<script>
+const mv=document.querySelector('#kit');let part='shirt',pattern='plain',logoData='';
+const $=id=>document.getElementById(id);
+const palettes=['#f3f3ef','#111827','#d71920','#0755c9','#f2c500','#087b45','#7b2cbf','#ff6b00','#13a9c7','#888888','#e7a6b6','#6b3d24'];
+const sw=$('swatches');palettes.forEach(c=>{let b=document.createElement('button');b.className='swatch';b.style.background=c;b.title=c;b.onclick=()=>{$('color').value=c;applyColor()};sw.append(b)});
+function rgb(hex){return [0,2,4].map(i=>parseInt(hex.slice(i+1,i+3),16)/255)}
+function applyColor(){
+ const color=rgb($('color').value),accent=rgb($('accent').value);
+ if(!mv.model){$('status').textContent='3D-Modell lädt…';return}
+ const mats=mv.model.materials;
+ mats.forEach((m,i)=>{
+  const name=(m.name||'').toLowerCase();
+  let target=(name.includes('seam')||name.includes('stitch')||name.includes('piping'))?accent:color;
+  if(part==='shirt' || part==='shorts' || part==='socks') {
+    // Base model materials are shared; color the selected base garment as the main fabric.
+    if(m.pbrMetallicRoughness) m.pbrMetallicRoughness.setBaseColorFactor([...target,1]);
+  }
+  if(m.pbrMetallicRoughness)m.pbrMetallicRoughness.setRoughnessFactor(Number($('rough').value)/100);
+ });
+ $('status').textContent='Farbe auf das 3D-Modell angewendet.';
+}
+mv.addEventListener('load',()=>{applyColor();$('status').textContent='3D-Modell bereit.'});
+$('color').addEventListener('input',applyColor);$('accent').addEventListener('input',applyColor);$('rough').addEventListener('input',applyColor);
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));b.classList.add('active');part=b.dataset.tab;$('status').textContent=part==='shirt'?'Trikot ausgewählt':part==='shorts'?'Hose ausgewählt':'Stutzen ausgewählt';});
+document.querySelectorAll('[data-pattern]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-pattern]').forEach(x=>x.classList.remove('active'));b.classList.add('active');pattern=b.dataset.pattern;$('status').textContent='Muster ausgewählt: '+b.textContent+'. Die Musterprojektion wird im nächsten Ausbau ergänzt.';});
+function orbit(theta,phi=75,r=3.3){mv.cameraOrbit=`${theta}deg ${phi}deg ${r}m`;mv.jumpCameraToGoal()}
+$('front').onclick=()=>{orbit(0);setView('front')};$('back').onclick=()=>{orbit(180);setView('back')};$('sideview').onclick=()=>{orbit(90);setView('side')};
+function setView(v){['front','back','sideview'].forEach(id=>$(id).classList.remove('active'));$(v).classList.add('active')}
+$('spin').onclick=()=>{mv.autoRotate=!mv.autoRotate;$('spin').classList.toggle('active',mv.autoRotate)};
+$('reset').onclick=()=>{mv.cameraOrbit='0deg 75deg 3.3m';mv.autoRotate=true;setView('front')};
+$('fullscreen').onclick=()=>{if(mv.requestFullscreen)mv.requestFullscreen()};
+function data(){return {part,pattern,color:$('color').value,accent:$('accent').value,rough:$('rough').value,player:$('player').value,number:$('number').value,sponsor:$('sponsor').value,logo:logoData}}
+function applyData(d){part=d.part||'shirt';pattern=d.pattern||'plain';$('color').value=d.color||'#f3f3ef';$('accent').value=d.accent||'#111827';$('rough').value=d.rough||82;$('player').value=d.player||'';$('number').value=d.number||'10';$('sponsor').value=d.sponsor||'';applyColor()}
+$('logo').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{logoData=r.result;$('status').textContent='Logo geladen und im Design gespeichert.'};r.readAsDataURL(f)};
+function save(){localStorage.setItem('kitforge-design',JSON.stringify(data()));$('status').textContent='Design auf diesem Gerät gespeichert.'}
+$('save').onclick=save;$('saveTop').onclick=save;
+$('load').onclick=()=>{let d=localStorage.getItem('kitforge-design');if(!d){$('status').textContent='Noch kein gespeichertes Design vorhanden.';return}applyData(JSON.parse(d));$('status').textContent='Design geladen.'};
+$('resetAll').onclick=()=>{applyData({color:'#f3f3ef',accent:'#111827',rough:82,number:'10'});$('status').textContent='Design zurückgesetzt.'};
+$('export').onclick=async()=>{try{let blob=await mv.toBlob({idealAspect:1});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='KitForge-Design.png';a.click();URL.revokeObjectURL(a.href);$('status').textContent='3D-Ansicht exportiert.'}catch(e){$('status').textContent='Export nicht verfügbar – bitte Screenshot verwenden.'}};
+</script>
+</body></html>
