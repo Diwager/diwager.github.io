@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.diwager.twa",
+        "sha256_cert_fingerprints": ["1A:A2:37:33:B3:FD:5D:27:CF:A7:EB:05:AE:3B:70:EA:A9:1C:9A:DB:7E:43:F9:C4:BD:D7:41:3B:2D:C5:9B:56"]
+      }
+    }]
