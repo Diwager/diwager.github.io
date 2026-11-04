@@ -746,7 +746,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){til
 $('stage').style.aspectRatio=String(VIEWS.front[4]);
 /* ===== Galerie über den eigenen Firebase-Server ===== */
 var FBCFG={apiKey:"AIzaSyDCtOxr3fGT4Yy4Mkr917VtZEP83hn7oW8",authDomain:"trikora.firebaseapp.com",projectId:"trikora",storageBucket:"trikora.firebasestorage.app",messagingSenderId:"278319699104",appId:"1:278319699104:web:108facc47fd9c5600e65c5"};
-var CL={ok:false,tried:false,user:null,uid:null,posts:[],votes:[],loaded:false,slow:false,err:'',sort:'new',subs:false,busy:false},FS=null,AUTH=null;
+var CL={ok:false,tried:false,user:null,uid:null,posts:[],votes:[],reps:[],loaded:false,slow:false,err:'',sort:'new',subs:false,busy:false},FS=null,AUTH=null;
 function initCloud(){if(CL.tried)return;CL.tried=true;try{if(!window.firebase)throw 0;firebase.initializeApp(FBCFG);AUTH=firebase.auth();FS=firebase.firestore();CL.ok=true;
 AUTH.getRedirectResult().catch(function(){});
 AUTH.onAuthStateChanged(function(u){CL.user=u;CL.uid=u?u.uid:null;galRender();panelIfSave()})}catch(e){CL.ok=false}galRender();panelIfSave()}
@@ -755,8 +755,9 @@ function login(){if(!AUTH)return;var p=new firebase.auth.GoogleAuthProvider();AU
 function logout(){if(AUTH)AUTH.signOut()}
 function subscribe(){if(CL.subs||!FS)return;CL.subs=true;var tm=setTimeout(function(){CL.slow=true;galRender()},10000);
 FS.collection('kits').orderBy('at','desc').limit(300).onSnapshot(function(s){CL.posts=s.docs.map(function(d){return Object.assign({key:d.id},d.data())});CL.loaded=true;CL.slow=false;clearTimeout(tm);galRender();panelIfSave()},function(e){CL.err=e.code||'x';clearTimeout(tm);galRender()});
-FS.collection('votes').onSnapshot(function(s){CL.votes=s.docs.map(function(d){return d.data()});galRender()},function(){})}
-function allPosts(){var out=CL.posts.map(function(p){var sum=0,n=0,mine=0;CL.votes.forEach(function(v){if(v.post===p.key&&v.uid!==p.uid){sum+=v.v;n++}if(v.post===p.key&&v.uid===CL.uid)mine=v.v});return Object.assign({},p,{avg:n?sum/n:0,n:n,mine:mine})});
+FS.collection('votes').onSnapshot(function(s){CL.votes=s.docs.map(function(d){return d.data()});galRender()},function(){});
+FS.collection('reports').onSnapshot(function(s){CL.reps=s.docs.map(function(d){return d.data()});galRender()},function(){})}
+function allPosts(){var out=CL.posts.map(function(p){var sum=0,n=0,mine=0;CL.votes.forEach(function(v){if(v.post===p.key&&v.uid!==p.uid){sum+=v.v;n++}if(v.post===p.key&&v.uid===CL.uid)mine=v.v});var rc=0,rm=false;CL.reps.forEach(function(r){if(r.post===p.key&&r.uid!==p.uid){rc++;if(r.uid===CL.uid)rm=true}});return Object.assign({},p,{avg:n?sum/n:0,n:n,mine:mine,rep:rc,repMe:rm})});out=out.filter(function(p){return p.uid===CL.uid||!(p.repMe||p.rep>=3)});
 out.sort(function(a,b){return CL.sort==='top'?(b.avg-a.avg)||(b.n-a.n)||(b.at-a.at):(b.at-a.at)});return out}
 function starsRO(v){var h='<span class="stars ro" aria-label="'+v.toFixed(1)+' von 5 Sternen">';for(var i=1;i<=5;i++)h+='<span class="'+(v>=i-.25?'on':'')+'">★</span>';return h+'</span>'}
 function authBar(){if(!CL.ok)return '';return CL.user?'<div class="seg"><span class="note" style="align-self:center">Angemeldet als '+esc(CL.user.displayName||'Spieler')+'</span><button type="button" data-logout="1">Abmelden</button><button type="button" data-delacc="1">'+(DELACC?'Wirklich alles löschen?':'Konto löschen')+'</button></div>'+(DELACC?'<p class="note" style="margin-top:8px">Damit werden dein Konto, alle deine Trikots in der Galerie und alle deine Bewertungen endgültig gelöscht. Tippe nochmal auf „Wirklich alles löschen?“.</p>':''):'<button type="button" class="btn go" data-login="1">Mit Google anmelden</button>'}
@@ -768,12 +769,14 @@ var ps=allPosts();
 if(!ps.length)h+='<div class="galnote">'+(CL.loaded?'Noch keine Trikots in der Galerie. Gestalte eins im Atelier und tippe oben auf „Online stellen“.':(CL.slow?'Die Galerie antwortet gerade nicht. Prüfe deine Verbindung.':'Galerie wird geladen …'))+'</div>';
 else h+='<div class="cards">'+ps.map(function(p){var own=p.uid===CL.uid,by=own?'Von dir':'Von '+esc(p.author||'Spieler');
 var rate='';if(!own&&CL.uid){rate='<div class="stars" role="group" aria-label="Bewerten">';for(var i=1;i<=5;i++)rate+='<button type="button" class="'+(p.mine>=i?'on':'')+'" data-rate="'+esc(p.key)+'" data-v="'+i+'" aria-label="'+i+' Sterne">★</button>';rate+='</div>'}
-return '<article class="card"><img src="'+p.img+'" alt="Trikot '+esc(p.name)+'" loading="lazy"><div class="cb"><h3>'+esc(p.name)+'</h3><span class="by">'+by+(p.team?' · '+esc(p.team):'')+'</span><div class="score">'+starsRO(p.avg)+'<b>'+(p.n?p.avg.toFixed(1):'–')+'</b>'+(p.n===1?'1 Bewertung':p.n+' Bewertungen')+'</div>'+(rate?'<div class="score">Deine Wertung '+rate+'</div>':(!CL.uid&&!own?'<div class="score"><button type="button" class="btn" data-login="1" style="padding:6px 10px;font-size:12px">Anmelden zum Bewerten</button></div>':''))+'<div class="row2"><button type="button" class="btn" data-copy="'+esc(p.key)+'">Nachbauen</button>'+(own?'<button type="button" class="btn" data-gdel="'+esc(p.key)+'">'+(GDEL===p.key?'Wirklich löschen?':'Löschen')+'</button>':'')+'</div></div></article>'}).join('')+'</div>'}
+return '<article class="card"><img src="'+p.img+'" alt="Trikot '+esc(p.name)+'" loading="lazy"><div class="cb"><h3>'+esc(p.name)+'</h3><span class="by">'+by+(p.team?' · '+esc(p.team):'')+'</span><div class="score">'+starsRO(p.avg)+'<b>'+(p.n?p.avg.toFixed(1):'–')+'</b>'+(p.n===1?'1 Bewertung':p.n+' Bewertungen')+'</div>'+(rate?'<div class="score">Deine Wertung '+rate+'</div>':(!CL.uid&&!own?'<div class="score"><button type="button" class="btn" data-login="1" style="padding:6px 10px;font-size:12px">Anmelden zum Bewerten</button></div>':''))+'<div class="row2"><button type="button" class="btn" data-copy="'+esc(p.key)+'">Nachbauen</button>'+(own?'<button type="button" class="btn" data-gdel="'+esc(p.key)+'">'+(GDEL===p.key?'Wirklich löschen?':'Löschen')+'</button>':'')+(!own&&CL.uid?'<button type="button" class="btn" data-grep="'+esc(p.key)+'">'+(GREP===p.key?'Wirklich melden?':'Melden')+'</button>':'')+'</div>'+(own&&p.rep?'<p class="note" style="color:#c0392b;margin-top:6px">'+p.rep+'× gemeldet'+(p.rep>=3?' – für andere ausgeblendet':'')+'</p>':'')+(GREP===p.key?'<p class="note" style="margin-top:6px">Melde Trikots mit echten Marken, Vereinslogos oder unpassenden Bildern. Tippe nochmal auf „Wirklich melden?“.</p>':'')+'</div></article>'}).join('')+'</div>'}
 g.innerHTML=h}
-var GDEL=null,VBUSY=false,PUBMSG='',DELACC=false;
+var GDEL=null,VBUSY=false,PUBMSG='',DELACC=false,GREP=null;
+function report(key){if(!CL.uid||!FS)return;GREP=null;CL.reps=CL.reps.concat([{post:key,uid:CL.uid}]);galRender();galNote('Danke! Das Trikot wurde gemeldet und ist für dich ausgeblendet.');
+FS.collection('reports').doc(key+'_'+CL.uid).set({post:key,uid:CL.uid}).catch(function(){galNote('Melden hat nicht geklappt.')})}
 function deleteAccount(){if(!CL.user||!FS)return;var uid=CL.uid,u=CL.user;
 var mine=CL.posts.filter(function(p){return p.uid===uid}),votes=CL.votes.filter(function(v){return v.uid===uid});
-var jobs=mine.map(function(p){return FS.collection('kits').doc(p.key).delete().then(function(){return p.files?FS.collection('kitfiles').doc(p.key).delete():null})}).concat(votes.map(function(v){return FS.collection('votes').doc(v.post+'_'+uid).delete()}));
+var jobs=mine.map(function(p){return FS.collection('kits').doc(p.key).delete().then(function(){return p.files?FS.collection('kitfiles').doc(p.key).delete():null})}).concat(votes.map(function(v){return FS.collection('votes').doc(v.post+'_'+uid).delete()})).concat(CL.reps.filter(function(r){return r.uid===uid}).map(function(r){return FS.collection('reports').doc(r.post+'_'+uid).delete()}));
 galNote('Konto wird gelöscht …');
 Promise.all(jobs).then(function(){return u.delete().catch(function(e){if(e&&e.code==='auth/requires-recent-login')return u.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(){return u.delete()});throw e})})
 .then(function(){DELACC=false;galRender();galNote('Dein Konto, deine Trikots und deine Bewertungen wurden gelöscht.')},function(e){DELACC=false;galRender();galNote('Löschen hat nicht ganz geklappt ('+(e&&e.code||'Fehler')+'). Schreib an aabr0958@gmail.com, dann lösche ich es für dich.')})}
@@ -809,7 +812,8 @@ else if(d.rate){rate(d.rate,+d.v)}
 else if(d.publish){publish()}
 else if(d.copy){var p=allPosts().filter(function(x){return x.key===d.copy})[0];if(p&&p.set){var go=function(upl){var s=JSON.parse(JSON.stringify(p.set));s.upl=upl||{};applySet(s);setMode('atelier');flash('„'+p.name+'“ ist jetzt im Atelier. Ändere es, wie du willst.')};
 if(p.files)FS.collection('kitfiles').doc(p.key).get().then(function(ds){go(ds.exists?ds.data().upl:{})},function(){go({})});else go({})}}
-else if(d.gdel){if(GDEL===d.gdel)gdel(d.gdel);else{GDEL=d.gdel;galRender()}}});
+else if(d.gdel){if(GDEL===d.gdel)gdel(d.gdel);else{GDEL=d.gdel;galRender()}}
+else if(d.grep){if(GREP===d.grep)report(d.grep);else{GREP=d.grep;galRender()}}});
 initCloud();
 $('online').onclick=function(){setMode('atelier');S.tab='speichern';ui();setTimeout(function(){var g=$('gname');if(g){g.scrollIntoView({behavior:'smooth',block:'center'});g.focus({preventScroll:true})}},60)};
 ui();
